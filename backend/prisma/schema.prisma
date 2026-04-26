@@ -1,0 +1,78 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+enum UserRole{
+  USER
+  ADMIN
+}
+enum OfferType{
+  REMOTE
+  ONSITE
+  HYBRID
+}
+enum ApplicationStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  password  String
+  role      UserRole @default(USER)
+  createdAt DateTime @default(now())
+
+
+  applications Application[]
+}
+
+model Company{
+   id          Int              @id @default(autoincrement())
+  name        String
+  description String
+  location    String
+  website     String?
+  createdAt   DateTime         @default(now())
+
+  offers      InternshipOffer[]
+}
+
+model InternshipOffer {
+  id             Int           @id @default(autoincrement())
+  title          String
+  description    String
+  location       String
+  type           OfferType
+  salaryOptional Float?
+  companyId      Int
+  createdAt      DateTime      @default(now())
+
+  company        Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  applications   Application[]
+}
+
+
+model Application {
+  id         Int                @id @default(autoincrement())
+  userId     Int
+  offerId    Int
+  status     ApplicationStatus  @default(PENDING)
+  motivation String
+  cvUrl      String?
+  createdAt  DateTime           @default(now())
+
+  user       User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  offer      InternshipOffer    @relation(fields: [offerId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, offerId])
+}
